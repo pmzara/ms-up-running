@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "YOUR_BUCKET"
+    bucket = "microservice-up-running-pmzara"
     key    = "terraform/backend"
-    region = "eu-west-1"
+    region = "eu-west-2"
   }
 }
