@@ -1,0 +1,52 @@
+name: Sandbox Environment Build
+
+on:
+  push
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Install kubectl (Kubernetes CLI)
+      run: |
+        sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2
+        curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+        echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+        sudo apt-get update
+        sudo apt-get install -y kubectl
+
+    - name: Install AWS CLI
+      run: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+
+    - name: Install Istio CLI
+      run: curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.6.0 sh -
+
+    - uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 0.12.19
+
+    - name: Terraform Format
+      run: terraform fmt
+
+    - name: Terraform Initialize
+      run: terraform init
+
+    - name: Terraform Validate
+      run: terraform validate -no-color
+
+    - name: Terraform Plan
+      run: terraform plan -no-color
+
+    - name: Terraform Apply
+      run: terraform apply -no-color -auto-approve
